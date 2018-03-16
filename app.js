@@ -9,8 +9,6 @@ var index = require('./routes/index');
 var users = require('./routes/users');
 var signup = require('./routes/signup');
 
-var mongo = require('./core/mongo');
-
 var app = express();
 
 // view engine setup

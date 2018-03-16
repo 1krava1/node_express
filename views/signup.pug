@@ -4,8 +4,16 @@ block content
   h1= 'Sign Up'
   p Welcome to #{title}
   form(action="/signup", method="post")
-    input(type="text", name="login", value=login ? login : '')
+    label(for="login") login
     br
-    input(type="password", name="password", value=password ? password : '')
+    input(id="login" type="text", name="login", value=login ? login : 'Nick')
+    br
+    label(for="email") email
+    br
+    input(id="email" type="email", name="email", value=email ? email : 'krava9519@gmail.com')
+    br
+    label(for="password") password
+    br
+    input(id="password" type="password", name="password", value=password ? password : '333333')
     br
     button(type="submit") Submit
