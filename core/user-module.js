@@ -1,4 +1,6 @@
 var mongoose = require('mongoose');
+var http = require('http');
+var axios = require('axios');
 
 UserModule = function() {
     this.init();
@@ -48,6 +50,9 @@ UserModule.prototype = {
     },
     saveNewUser: function( data ) {
         var defaults = {
+            login: '',
+            password: '',
+            email: '',
             steamID: '',
             firstName: '',
             lastName: '',
@@ -55,7 +60,7 @@ UserModule.prototype = {
             registrationIP: '',
             registrationDate: Date.now(),
             lastLoginIP: '',
-            lastLoginDate: '',
+            lastLoginDate: Date.now(),
         };
         var userData = Object.assign( {}, defaults, data );
         var newUser = new this.User( userData );
@@ -65,6 +70,13 @@ UserModule.prototype = {
             console.log(newUser);
         });
     },
+    getUserIP( req ) {
+        with(req) return (headers['x-forwarded-for'] || '').split(',')[0] || connection.remoteAddress;
+    },
+    getUserFromSteam( steamID ) {
+        return axios.get('http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002?key=12A6DC55C197F422226960E2CC4AFDB6&steamids=' + steamID);
+    },
+
     getUsers: function() {
         return this.User.find(function(err, users) {
             if (err) return console.log(err);
