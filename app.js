@@ -11,6 +11,7 @@ databases.mongodb();
 var index = require('./src/routes/index');
 var users = require('./src/routes/users');
 var signup = require('./src/routes/signup');
+var inventory = require('./src/routes/inventory');
 
 var app = express();
 
@@ -36,6 +37,7 @@ app.use(function(req, res, next) {
 app.use('/', index);
 app.use('/users', users);
 app.use('/signup', signup);
+app.use('/inventory', inventory);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

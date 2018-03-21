@@ -12,7 +12,7 @@ class UserModel {
             login: String,
             password: String,
             email: String,
-            steamID: Number,
+            steamID: String,
             firstName: String,
             lastName: String,
             avatar: String,
@@ -50,6 +50,9 @@ class UserModel {
     };
     delete( data ) {
         return {'models/User.delete()': data};
+    };
+    authUser() {
+
     }
 }
 
