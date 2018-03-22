@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 
 const databases = require('./src/databases');
 databases.mongodb();
+databases.redis()
 
 var index = require('./src/routes/index');
 var users = require('./src/routes/users');
