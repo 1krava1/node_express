@@ -1,5 +1,5 @@
 var axios = require('axios');
-
+var InventoryModel = require('../models/inventory');
 var steamUserInventory = require('steam-user-inventory');
 
 class InventoryService {
@@ -12,6 +12,7 @@ class InventoryService {
     }
     
     getInventory(req, res, next) {
+        // res.send(InventoryModel.getInventoryFromRedis(req.params.steamID, this.apps[req.params.game]));
         this.getSteamUserInventory(req.params.steamID, "" + this.apps[req.params.game] + "/2/").then((response) => {
             res.send(this.normalizeInventory(response.data));
         });

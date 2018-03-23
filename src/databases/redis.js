@@ -1,23 +1,27 @@
 var redis = require('redis');
 
-module.exports = () => {
-    client = redis.createClient();
+class Redis {
+    constructor(){
+        this.open();
+    }
 
-    // if you'd like to select database 3, instead of 0 (default), call
-    // client.select(3, function() { /* ... */ });
+    open(){
+        const client = this.client = redis.createClient();
+            client.keys('*', (err, keys) => {
+                console.log(keys);
+            });
+    }
 
-    client.on("error", function (err) {
-        console.log("Error " + err);
-    });
+    set( key, value ){
+        return this.client.set(key, value, 'EX', 36000);
+    }
 
-    client.set("string key", "string val", redis.print);
-    client.hset("hash key", "hashtest 1", "some value", redis.print);
-    client.hset(["hash key", "hashtest 2", "some other value"], redis.print);
-    client.hkeys("hash key", function (err, replies) {
-        console.log(replies.length + " replies:");
-        replies.forEach(function (reply, i) {
-            console.log("    " + i + ": " + reply);
-        });
-        client.quit();
-    });
-};
+    get( key ){
+        return this.client.get(key);
+    }
+
+    close(){
+        this.client.quit();
+    }
+}
+module.exports = new Redis();

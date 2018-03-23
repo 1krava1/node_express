@@ -1,5 +1,4 @@
 var mongoose = require('mongoose');
-var http = require('http');
 var axios = require('axios');
 
 class UserModel {
