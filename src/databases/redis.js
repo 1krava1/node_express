@@ -7,9 +7,6 @@ class Redis {
 
     open(){
         const client = this.client = redis.createClient();
-            client.keys('*', (err, keys) => {
-                console.log(keys);
-            });
     }
 
     set( key, value ){

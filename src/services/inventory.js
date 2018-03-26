@@ -13,8 +13,19 @@ class InventoryService {
     
     getInventory(req, res, next) {
         // res.send(InventoryModel.getInventoryFromRedis(req.params.steamID, this.apps[req.params.game]));
-        this.getSteamUserInventory(req.params.steamID, "" + this.apps[req.params.game] + "/2/").then((response) => {
-            res.send(this.normalizeInventory(response.data));
+        const steamid = req.params.steamID,
+              gameid  = this.apps[req.params.game];
+        InventoryModel.isInventoryExists( steamid, gameid ).then( (exists) => {
+            if ( exists ) {
+                InventoryModel.getInventoryFromRedis( steamid, gameid ).then((resolve) => {
+                    res.send( resolve );
+                })
+            } else {
+                this.getSteamUserInventory(req.params.steamID, "" + this.apps[req.params.game] + "/2/").then((response) => {
+                    InventoryModel.setInventoryToRedis( steamid, gameid, JSON.stringify(this.normalizeInventory(response.data)) ).then(response => {});
+                    res.send(this.normalizeInventory(response.data));
+                });
+            }
         });
     }
 
