@@ -12,7 +12,6 @@ class InventoryService {
     }
     
     getInventory(req, res, next) {
-        // res.send(InventoryModel.getInventoryFromRedis(req.params.steamID, this.apps[req.params.game]));
         const steamid = req.params.steamID,
               gameid  = this.apps[req.params.game];
         InventoryModel.isInventoryExists( steamid, gameid ).then( (exists) => {
@@ -28,11 +27,9 @@ class InventoryService {
             }
         });
     }
-
     getSteamUserInventory(user, game){
         return axios.get("http://steamcommunity.com/inventory/" + user + "/" + game + "/2?l=english&count=5000");
     }
-
     normalizeInventory(inventory) {
         var normalizedInventory = [];
 
@@ -55,7 +52,6 @@ class InventoryService {
                 type: null,
                 exterior: null,
                 quality: null,
-                raw: item,
             };
             
             item.tags.forEach(tag => {
@@ -76,6 +72,34 @@ class InventoryService {
             normalizedInventory.push(data);
         });
         return normalizedInventory;
+    }
+
+    getPrices( gameid, items ) {
+        const that = this;
+        InventoryModel.isPricesExists( gameid ).then( (exists) => {
+            if ( exists ) {
+                InventoryModel.getPricesFromRedis( gameid ).then((resolve) => {
+                    res.send( resolve );
+                });
+            } else {
+                this.getOPSkinsPrices(gameid).then((response) => {
+                    InventoryModel.setPricesToRedis( gameid, that.normalizePrices(response.data.response) ).then((reply) => {
+                        res.send(that.normalizePrices(response.data.response));
+                    });
+                });
+            }
+        });
+    }
+    getOPSkinsPrices( gameid ) {
+        return axios.get( 'https://api.opskins.com/IPricing/GetAllLowestListPrices/v1/?appid=' + gameid );
+    }
+    normalizePrices( items ) {
+        let normalizedPrices = [];
+        Object.keys( items ).forEach((value, index, array) => {
+            normalizedPrices.push(value);
+            normalizedPrices.push(items[value].price);
+        });
+        return normalizedPrices;
     }
 }
 

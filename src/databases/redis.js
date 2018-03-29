@@ -6,11 +6,11 @@ class Redis {
     }
 
     open(){
-        const client = this.client = redis.createClient();
+        const client = this.client = redis.createClient({expire: 10*60});
     }
 
     set( key, value ){
-        return this.client.set(key, value, 'EX', 36000);
+        return this.client.set([key, value, 'NX', 'EX', 10*60], function(err, reply) {console.log(reply)})
     }
 
     get( key ){
