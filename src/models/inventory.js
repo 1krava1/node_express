@@ -27,6 +27,9 @@ class InventoryModel {
     }
     isInventoryExists( steamid, gameid ){
         return new Promise ((resolve) => redis.client.keys('inventory.' + steamid + '.' + gameid, (err, rep) => {
+            if (err) {
+                return reject(err);
+            }
             resolve( !!rep.length );
         }));
     }
@@ -34,8 +37,10 @@ class InventoryModel {
     setPricesToRedis( gameid, items ) {
         // items = [ 'key1', 'value1', 'key2', 'value2', ... ]
         return new Promise((resolve, reject) => {
-            redis.client.hmset('prices.' + gameid, items, function (err, res) {
+            redis.client.hmset('prices.' + gameid, items, function (err, reply) {
+                if (err) return reject(err);
                 redis.client.expire('prices.' + gameid, 60 * 10);
+                resolve(reply);
             });
         });
     }
@@ -44,16 +49,12 @@ class InventoryModel {
         return new Promise((resolve, reject) => {
             if ( !!items ) {
                 redis.client.hmget('prices.' + gameid, items, (err, reply) => {
-                    if (err) {
-                        return reject(err);
-                    }
+                    if (err) return reject(err);
                     resolve(reply);
                 });
             } else {
                 redis.client.hgetall('prices.' + gamdeid, (err, reply) => {
-                    if (err) {
-                        return reject(err);
-                    }
+                    if (err) return reject(err);
                     resolve(reply);
                 });
             }
@@ -61,6 +62,7 @@ class InventoryModel {
     }
     isPricesExists( gameid ) {
         return new Promise ((resolve) => redis.client.keys('prices.' + gameid, (err, rep) => {
+            if (err) return reject(err);
             resolve( !!rep.length );
         }));
     }

@@ -18,7 +18,7 @@ module.exports = () => {
   const db = mongoose.connection;
 
   db.on('connecting', () => {
-    console.log('Connecting to MongoDB...');
+    // console.log('Connecting to MongoDB...');
   });
 
   db.on('error', (err) => {
@@ -27,7 +27,7 @@ module.exports = () => {
   });
 
   db.on('connected', () => {
-    console.log('Connected to MongoDB!');
+    // console.log('Connected to MongoDB!');
   });
 
   db.once('open', () => {

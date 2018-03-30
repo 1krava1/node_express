@@ -21,8 +21,10 @@ class InventoryService {
                 })
             } else {
                 this.getSteamUserInventory(req.params.steamID, "" + this.apps[req.params.game] + "/2/").then((response) => {
-                    InventoryModel.setInventoryToRedis( steamid, gameid, JSON.stringify(this.normalizeInventory(response.data)) ).then(response => {});
-                    res.send(this.normalizeInventory(response.data));
+                    this.normalizeInventory(response.data).then((result) => {
+                        InventoryModel.setInventoryToRedis( steamid, gameid, JSON.stringify(result) ).then(response => {});
+                        res.send(result);
+                    });
                 });
             }
         });
@@ -31,70 +33,98 @@ class InventoryService {
         return axios.get("http://steamcommunity.com/inventory/" + user + "/" + game + "/2?l=english&count=5000");
     }
     normalizeInventory(inventory) {
-        var normalizedInventory = [];
-
-        inventory.descriptions.forEach((item, index, array) => {
-            var data = {
-                id: inventory.assets[index].id,
-                amount: inventory.assets[index].amount,
-                pos: inventory.assets[index].pos,
-                name: item.name,
-                marketHashName: item.market_hash_name,
-                appid: item.appid,
-                classid: item.classid,
-                instanceid: item.instanceid,
-                tradable: item.tradable,
-                marketable: item.marketable,
-                marketTradableRestriction: item.market_tradable_restriction,
-                link: item.actions ? item.actions[0].link : null,
-                image: `http://steamcommunity-a.akamaihd.net/economy/image/${item.icon_url_large || item.icon_url}`,
-                category: null,
-                type: null,
-                exterior: null,
-                quality: null,
-            };
-            
-            item.tags.forEach(tag => {
-                if (tag.category === 'Type') {
-                    data.type = tag.name;
-                }
-                if (tag.category === 'Weapon') {
-                    data.weapon = tag.name;
-                }
-                if (tag.category === 'Quality') {
-                    data.category = tag.name;
-                }
-                if (tag.category === 'Exterior') {
-                    data.exterior = tag.name;
-                }
+        return new Promise ((resolve, reject) => {
+            const normalizedInventory = [];
+            const names = [];
+            let appid = 0;
+    
+            inventory.descriptions.forEach((item, index, array) => {
+                let data = {
+                    id: inventory.assets[index].id,
+                    amount: inventory.assets[index].amount,
+                    pos: inventory.assets[index].pos,
+                    name: item.name,
+                    marketHashName: item.market_hash_name,
+                    appid: item.appid,
+                    classid: item.classid,
+                    instanceid: item.instanceid,
+                    tradable: item.tradable,
+                    marketable: item.marketable,
+                    marketTradableRestriction: item.market_tradable_restriction,
+                    link: item.actions ? item.actions[0].link : null,
+                    image: `http://steamcommunity-a.akamaihd.net/economy/image/${item.icon_url_large || item.icon_url}`,
+                    category: null,
+                    type: null,
+                    exterior: null,
+                    quality: null,
+                };
+                
+                item.tags.forEach(tag => {
+                    if (tag.category === 'Type') {
+                        data.type = tag.name;
+                    }
+                    if (tag.category === 'Weapon') {
+                        data.weapon = tag.name;
+                    }
+                    if (tag.category === 'Quality') {
+                        data.category = tag.name;
+                    }
+                    if (tag.category === 'Exterior') {
+                        data.exterior = tag.name;
+                    }
+                });
+    
+                names.push(item.market_hash_name);
+                normalizedInventory.push(data);
+                appid = item.appid;
             });
-
-            normalizedInventory.push(data);
+            this.getPrices( appid, names ).then((response) => {
+                normalizedInventory.forEach((item, index, array) => {
+                    normalizedInventory[index].price = response[item.marketHashName];
+                });
+                resolve(normalizedInventory);
+            });
         });
-        return normalizedInventory;
     }
 
     getPrices( gameid, items ) {
-        const that = this;
-        InventoryModel.isPricesExists( gameid ).then( (exists) => {
-            if ( exists ) {
-                InventoryModel.getPricesFromRedis( gameid ).then((resolve) => {
-                    res.send( resolve );
-                });
-            } else {
-                this.getOPSkinsPrices(gameid).then((response) => {
-                    InventoryModel.setPricesToRedis( gameid, that.normalizePrices(response.data.response) ).then((reply) => {
-                        res.send(that.normalizePrices(response.data.response));
+        return new Promise ((resolve, reject) => {
+            InventoryModel.isPricesExists( gameid ).then( (exists) => {
+                if ( exists ) {
+                    InventoryModel.getPricesFromRedis( gameid, items ).then((response) => {
+                        const prices = {};
+                        items.forEach((name, index, array) => {
+                            prices[name] = response[index];
+                        });
+                        resolve(prices);
                     });
-                });
-            }
+                } else {
+                    this.getOPSkinsPrices(gameid).then((response, error) => {
+                        if (error) reject(error);
+                        InventoryModel.getPricesFromRedis( gameid, items ).then((response) => {
+                            const prices = {};
+                            items.forEach((name, index, array) => {
+                                prices[name] = response[index];
+                            });
+                            resolve(prices);
+                        });
+                    });
+                }
+            });
         });
     }
     getOPSkinsPrices( gameid ) {
-        return axios.get( 'https://api.opskins.com/IPricing/GetAllLowestListPrices/v1/?appid=' + gameid );
+        return new Promise((resolve, reject) => {
+            axios.get( 'https://api.opskins.com/IPricing/GetAllLowestListPrices/v1/?appid=' + gameid ).then((response, error) => {
+                if (error) reject(error);
+                InventoryModel.setPricesToRedis( gameid, this.normalizePrices(response.data.response) ).then((response) => {
+                    resolve(response);
+                });
+            })
+        });
     }
     normalizePrices( items ) {
-        let normalizedPrices = [];
+        const normalizedPrices = [];
         Object.keys( items ).forEach((value, index, array) => {
             normalizedPrices.push(value);
             normalizedPrices.push(items[value].price);
