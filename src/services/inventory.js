@@ -37,7 +37,7 @@ class InventoryService {
             const normalizedInventory = [];
             const names = [];
             let appid = 0;
-    
+            if ( !inventory.descriptions ) resolve([]);
             inventory.descriptions.forEach((item, index, array) => {
                 let data = {
                     n: index,
