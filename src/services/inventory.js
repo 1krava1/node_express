@@ -40,6 +40,7 @@ class InventoryService {
     
             inventory.descriptions.forEach((item, index, array) => {
                 let data = {
+                    n: index,
                     id: inventory.assets[index].id,
                     amount: inventory.assets[index].amount,
                     pos: inventory.assets[index].pos,
@@ -61,16 +62,16 @@ class InventoryService {
                 
                 item.tags.forEach(tag => {
                     if (tag.category === 'Type') {
-                        data.type = tag.name;
+                        data.type = tag.internal_name;
                     }
                     if (tag.category === 'Weapon') {
-                        data.weapon = tag.name;
+                        data.weapon = tag.internal_name;
                     }
                     if (tag.category === 'Quality') {
-                        data.category = tag.name;
+                        data.category = tag.internal_name;
                     }
                     if (tag.category === 'Exterior') {
-                        data.exterior = tag.name;
+                        data.exterior = tag.internal_name;
                     }
                 });
     
@@ -80,7 +81,7 @@ class InventoryService {
             });
             this.getPrices( appid, names ).then((response) => {
                 normalizedInventory.forEach((item, index, array) => {
-                    normalizedInventory[index].price = response[item.marketHashName];
+                    normalizedInventory[index].price = !!response[item.marketHashName] ? response[item.marketHashName] : 0;
                 });
                 resolve(normalizedInventory);
             });
