@@ -37,6 +37,7 @@ class InventoryService {
             const names = [];
             let normalizedInventory = [];
             let appid = 0;
+            
             if ( !inventory.descriptions ) resolve([]);
             inventory.descriptions.forEach((item, index, array) => {
                 let data = {
@@ -60,20 +61,22 @@ class InventoryService {
                     quality: null,
                 };
                 
-                item.tags.forEach(tag => {
-                    if (tag.category === 'Type') {
-                        data.type = tag.internal_name;
-                    }
-                    if (tag.category === 'Weapon') {
-                        data.weapon = tag.internal_name;
-                    }
-                    if (tag.category === 'Quality') {
-                        data.category = tag.internal_name;
-                    }
-                    if (tag.category === 'Exterior') {
-                        data.exterior = tag.internal_name;
-                    }
-                });
+                if ( !!item.tags ) {
+                    item.tags.forEach(tag => {
+                        if (tag.category === 'Type') {
+                            data.type = tag.internal_name;
+                        }
+                        if (tag.category === 'Weapon') {
+                            data.weapon = tag.internal_name;
+                        }
+                        if (tag.category === 'Quality') {
+                            data.category = tag.internal_name;
+                        }
+                        if (tag.category === 'Exterior') {
+                            data.exterior = tag.internal_name;
+                        }
+                    });   
+                }
     
                 names.push(item.market_hash_name);
                 normalizedInventory.push(data);
@@ -81,19 +84,19 @@ class InventoryService {
             });
             this.getPrices( appid, names ).then((response) => {
                 const inventory = {
-                    tradeable: [],
-                    untradeable: [],
+                    tradable: [],
+                    untradable: [],
                 }
                 normalizedInventory.forEach((item, index, array) => {
-                    if ( !!response[item.marketHashName] || !item.tradable ) {
-                        normalizedInventory[index].price = response[item.marketHashName];
-                        inventory.tradeable.push(normalizedInventory[index]);
+                    if ( !!response[item.marketHashName] && !!item.tradable ) {
+                        normalizedInventory[index].price = !!response[item.marketHashName] ? response[item.marketHashName] : 0;
+                        inventory.tradable.push(normalizedInventory[index]);
                     } else {
-                        normalizedInventory[index].price = 0;
-                        inventory.untradeable.push(normalizedInventory[index]);
+                        normalizedInventory[index].price = !!response[item.marketHashName] ? response[item.marketHashName] : 0;
+                        inventory.untradable.push(normalizedInventory[index]);
                     }
                 });
-                normalizedInventory = inventory.tradeable.concat(inventory.untradeable);
+                normalizedInventory = inventory.tradable.concat([],inventory.untradable);
                 normalizedInventory.forEach((item, index, array) => {
                     item.n = index;
                 });
