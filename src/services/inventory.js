@@ -34,8 +34,8 @@ class InventoryService {
     }
     normalizeInventory(inventory) {
         return new Promise ((resolve, reject) => {
-            const normalizedInventory = [];
             const names = [];
+            let normalizedInventory = [];
             let appid = 0;
             if ( !inventory.descriptions ) resolve([]);
             inventory.descriptions.forEach((item, index, array) => {
@@ -80,8 +80,22 @@ class InventoryService {
                 appid = item.appid;
             });
             this.getPrices( appid, names ).then((response) => {
+                const inventory = {
+                    tradeable: [],
+                    untradeable: [],
+                }
                 normalizedInventory.forEach((item, index, array) => {
-                    normalizedInventory[index].price = !!response[item.marketHashName] ? response[item.marketHashName] : 0;
+                    if ( !!response[item.marketHashName] ) {
+                        normalizedInventory[index].price = response[item.marketHashName];
+                        inventory.tradeable.push(normalizedInventory[index]);
+                    } else {
+                        normalizedInventory[index].price = 0;
+                        inventory.untradeable.push(normalizedInventory[index]);
+                    }
+                });
+                normalizedInventory = inventory.tradeable.concat(inventory.untradeable);
+                normalizedInventory.forEach((item, index, array) => {
+                    item.n = index;
                 });
                 resolve(normalizedInventory);
             });
