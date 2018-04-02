@@ -85,7 +85,7 @@ class InventoryService {
                     untradeable: [],
                 }
                 normalizedInventory.forEach((item, index, array) => {
-                    if ( !!response[item.marketHashName] ) {
+                    if ( !!response[item.marketHashName] || !item.tradable ) {
                         normalizedInventory[index].price = response[item.marketHashName];
                         inventory.tradeable.push(normalizedInventory[index]);
                     } else {
