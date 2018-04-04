@@ -19,6 +19,9 @@ class UserModel {
             registrationDate: String,
             lastLoginIP: String,
             lastLoginDate: String,
+            roles: [String],
+            invitedBy: String,
+            token: String
         });
         try{
             this.User = mongoose.model( 'User', this.userSchema );

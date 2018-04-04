@@ -23,6 +23,9 @@ class UserService {
                         registrationDate: Date.now(),
                         lastLoginIP: this.getUserIP(req),
                         lastLoginDate: Date.now(),
+                        roles: ['user'],
+                        invitedBy: '',
+                        token: ''
                     };
                     UserModel.create( data );
                     this.getUserFromDB( {steamID: steamID} ).then(user => {
