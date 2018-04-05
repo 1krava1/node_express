@@ -13,9 +13,10 @@ class InventoryService {
     
     getInventory(req, res, next) {
         const steamid = req.params.steamID,
-              gameid  = this.apps[req.params.game];
+              gameid  = this.apps[req.params.game],
+              refresh = req.params.refresh;
         InventoryModel.isInventoryExists( steamid, gameid ).then( (exists) => {
-            if ( exists ) {
+            if ( exists && refresh == 0 ) {
                 InventoryModel.getInventoryFromRedis( steamid, gameid ).then((resolve) => {
                     res.send( resolve );
                 })
